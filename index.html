@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lakshya — Three Lands, One Journey · London · India · Ireland</title>
+<meta name="description" content="Lakshya's animated 3D travel journal through London, India and Ireland — a scroll-driven journey across three lands." />
+<meta name="theme-color" content="#06080f" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Lakshya — Three Lands, One Journey" />
+<meta property="og:description" content="An animated 3D travel journal through London, India and Ireland." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23070c14'/%3E%3Cpath d='M12 34l40-14-16 40-8-16z' fill='%2335d07f'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<!-- flip to .js before first paint so reveal animations don't flash -->
+<script>
+  document.documentElement.classList.remove('no-js');
+  document.documentElement.classList.add('js');
+</script>
+</head>
+<body>
+
+<!-- ============ LOADER ============ -->
+<div id="loader" class="loader">
+  <div class="loader__inner">
+    <div class="loader__mark">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 34l46-18L36 60l-8-18z" /></svg>
+    </div>
+    <p class="loader__name">LAKSHYA</p>
+    <p class="loader__sub">packing the bag…</p>
+    <div class="loader__bar"><i></i></div>
+    <p class="loader__pct"><span id="load-pct">0</span>%</p>
+  </div>
+</div>
+
+<!-- ============ FIXED CHROME ============ -->
+<div class="progress" aria-hidden="true"><i id="progress-bar"></i></div>
+
+<div class="glow" id="cursor" aria-hidden="true"></div>
+
+<!-- The pointer: a small traveller dragging her wheeled case.
+     Parts named for main.js: #w-upper (bobs), #leg-front / #leg-back (walk),
+     #w-bag (swings back on its handle), #wheel-a / #wheel-b (roll). -->
+<div class="walker" id="walker" aria-hidden="true">
+  <div class="walker__pivot" id="walker-pivot">
+    <svg class="walker__svg" viewBox="0 0 72 66" fill="none">
+      <ellipse id="w-shadow" cx="40" cy="59.6" rx="25" ry="2.6" fill="#000" opacity="0.36" />
+
+      <!-- the case: pivots on the grip, so it trails back as she is pulled along -->
+      <g id="w-bag">
+        <path d="M39.5 30.5 25 42.5" stroke="#9aa3b2" stroke-width="1.6" stroke-linecap="round" />
+        <path d="M35.4 30h6.6" stroke="#9aa3b2" stroke-width="2.2" stroke-linecap="round" />
+        <rect x="8.5" y="42.5" width="18.5" height="14.5" rx="3" fill="#b06a3b" stroke="#6f4021" stroke-width="1.2" />
+        <path d="M12 42.5v14.5M23.5 42.5v14.5" stroke="#6f4021" stroke-width="1" opacity="0.5" />
+        <rect x="8.5" y="48.4" width="18.5" height="3.2" fill="#8d5230" opacity="0.85" />
+        <g id="wheel-a">
+          <circle cx="12.5" cy="58" r="2.5" fill="#20212b" stroke="#9aa3b2" stroke-width="0.7" />
+          <path d="M10.2 58h4.6" stroke="#9aa3b2" stroke-width="0.7" />
+        </g>
+        <g id="wheel-b">
+          <circle cx="21.5" cy="58" r="2.5" fill="#20212b" stroke="#9aa3b2" stroke-width="0.7" />
+          <path d="M19.2 58h4.6" stroke="#9aa3b2" stroke-width="0.7" />
+        </g>
+      </g>
+
+      <!-- legs, hinged at the hip -->
+      <g id="leg-back">
+        <path d="M53 42 50 55.5" stroke="#2b2f3d" stroke-width="3.4" stroke-linecap="round" />
+        <ellipse cx="49" cy="56.6" rx="2.6" ry="1.9" fill="#1b1d26" />
+      </g>
+      <g id="leg-front">
+        <path d="M53 42 55.6 55.5" stroke="#3a4052" stroke-width="3.4" stroke-linecap="round" />
+        <ellipse cx="56.6" cy="56.6" rx="2.6" ry="1.9" fill="#232632" />
+      </g>
+
+      <!-- everything that rides the step-bob -->
+      <g id="w-upper">
+        <path d="M50.5 28.5Q45 27 39.5 30" stroke="#e0a97f" stroke-width="2.8" stroke-linecap="round" />
+        <path d="M47.6 25.2q-2.1 8-2.7 18.4 7.6 2.1 15.3 0-0.6-10.4-2.7-18.4z"
+              fill="var(--accent)" stroke="rgba(6,8,15,0.55)" stroke-width="1.1" />
+        <path d="M47.9 26.6q5.1 1.7 10.3 0" stroke="#fff" stroke-width="2.1" opacity="0.6" stroke-linecap="round" />
+        <path d="M53 22.6v2.6" stroke="#e0a97f" stroke-width="2.4" stroke-linecap="round" />
+        <circle cx="53" cy="15.6" r="6.6" fill="#eeb98a" stroke="rgba(6,8,15,0.4)" stroke-width="1" />
+        <path d="M46.4 14.6a6.6 6.6 0 0 1 12.4-2.4q-3-1.6-6.4-1.4-3.6 0.2-6 3.8z" fill="#2a2233" />
+        <circle cx="46.6" cy="10.9" r="2.9" fill="#2a2233" />
+        <circle cx="57.4" cy="15.4" r="0.95" fill="#241d2b" />
+      </g>
+    </svg>
+  </div>
+</div>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="nav" id="nav">
+  <a class="brand" href="#hero" aria-label="Lakshya — home">
+    <span class="brand__glyph" aria-hidden="true">
+      <svg viewBox="0 0 32 32"><path d="M3 17l26-10-10 23-4-9z" /></svg>
+    </span>
+    <span class="brand__text">LAKSHYA<em>travel journal</em></span>
+  </a>
+
+  <button class="nav__toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav-menu">
+    <span></span><span></span><span></span>
+    <span class="sr-only">Menu</span>
+  </button>
+
+  <nav class="nav__menu" id="nav-menu" aria-label="Main">
+    <a href="#london"><i>01</i>London</a>
+    <a href="#india"><i>02</i>India</a>
+    <a href="#ireland"><i>03</i>Ireland</a>
+    <a href="#route"><i>04</i>Route</a>
+    <a href="#gallery"><i>05</i>Postcards</a>
+    <a href="#journal"><i>06</i>Journal</a>
+  </nav>
+</header>
+
+<!-- fixed chapter HUD -->
+<aside class="hud" aria-hidden="true">
+  <span class="hud__label">now travelling</span>
+  <span class="hud__place" id="hud-place">Departure</span>
+  <span class="hud__coord" id="hud-coord">51.5074° N · 0.1278° W</span>
+</aside>
+
+<!-- the fixed 3D world -->
+<canvas id="world" aria-hidden="true"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ============ CONTENT ============ -->
+<main id="main">
+
+  <!-- ───────── HERO ───────── -->
+  <section class="hero" id="hero" data-zone="0">
+    <div class="hero__inner">
+      <p class="eyebrow reveal">A travel journal by</p>
+      <h1 class="hero__title" data-split>LAKSHYA</h1>
+      <p class="hero__tagline reveal">
+        Three lands, one journey —<br />
+        <span class="rotator"><span id="rotator">London</span></span>
+      </p>
+      <p class="hero__lead reveal">
+        Thirty-nine days. Four flights, nine trains, one borrowed umbrella.
+        Scroll down and fly through it with me.
+      </p>
+      <div class="hero__cta reveal">
+        <a class="btn btn--solid" href="#london">Begin the journey <i>→</i></a>
+        <a class="btn btn--ghost" href="#route">See the route</a>
+      </div>
+    </div>
+
+    <ul class="stats" aria-label="Trip numbers">
+      <li><b data-count="3">0</b><span>countries</span></li>
+      <li><b data-count="39">0</b><span>days away</span></li>
+      <li><b data-count="41286">0</b><span>km travelled</span></li>
+      <li><b data-count="17">0</b><span>cities</span></li>
+    </ul>
+
+    <a class="scroll-cue" href="#london" aria-label="Scroll to begin">
+      <span>scroll</span><i></i>
+    </a>
+  </section>
+
+  <!-- ───────── MARQUEE ───────── -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee__track">
+      <span>LONDON · DELHI · JAIPUR · GALWAY · VARANASI · CORK · KERALA · BELFAST · AGRA · DINGLE · MUMBAI · EDINBURGH · </span>
+      <span>LONDON · DELHI · JAIPUR · GALWAY · VARANASI · CORK · KERALA · BELFAST · AGRA · DINGLE · MUMBAI · EDINBURGH · </span>
+    </div>
+  </div>
+
+  <!-- ───────── 01 LONDON ───────── -->
+  <section class="chapter" id="london" data-zone="1" data-accent="london">
+    <div class="chapter__ghost" data-parallax="0.18" aria-hidden="true">01</div>
+
+    <div class="chapter__head">
+      <p class="chapter__tag reveal"><i>Chapter 01</i> United Kingdom</p>
+      <h2 class="chapter__title" data-split>London</h2>
+      <p class="chapter__place reveal"><span>8 days</span> · March · 6°C and raining politely</p>
+    </div>
+
+    <div class="chapter__body">
+      <div class="chapter__copy reveal">
+        <p class="lead">
+          It began with a night flight and a window seat, London arriving as a
+          smudge of orange light beneath low cloud.
+        </p>
+        <p>
+          I walked it rather than rode it. Seven days of the Tube only when my
+          legs gave in, and the city rewarded me for it — a brass band in a
+          Bloomsbury square, a bookshop that had been there since 1902, the
+          smell of roasted chestnuts at a market I never learned the name of.
+        </p>
+        <p>
+          The rain was constant and soft, the kind you stop noticing. Everyone
+          apologises for it and no one actually minds.
+        </p>
+        <blockquote>
+          “London doesn’t show you its best side. It waits until your third
+          day, then hands you a sunset over Waterloo Bridge.”
+        </blockquote>
+      </div>
+
+      <ul class="facts reveal">
+        <li><span>Base</span><b>Camden Town</b></li>
+        <li><span>Weather</span><b>Soft, grey, kind</b></li>
+        <li><span>Best bite</span><b>Borough Market</b></li>
+        <li><span>Best hour</span><b>06:20, Tower Bridge</b></li>
+        <li><span>Tea drunk</span><b>41 cups</b></li>
+        <li><span>Umbrellas lost</span><b>2</b></li>
+      </ul>
+    </div>
+
+    <ul class="highlights">
+      <li class="reveal">
+        <span class="highlights__n">01</span>
+        <h3>Big Ben &amp; Westminster</h3>
+        <p>Heard it before I saw it. Twelve bells and the whole bridge stopped moving to listen.</p>
+      </li>
+      <li class="reveal">
+        <span class="highlights__n">02</span>
+        <h3>Borough Market</h3>
+        <p>Cheese, coffee, a man shouting about scallops. Breakfast became a two-hour event.</p>
+      </li>
+      <li class="reveal">
+        <span class="highlights__n">03</span>
+        <h3>The London Eye</h3>
+        <p>Thirty minutes of altitude and a city reorganising itself into something you can read.</p>
+      </li>
+      <li class="reveal">
+        <span class="highlights__n">04</span>
+        <h3>Camden &amp; Soho</h3>
+        <p>Records until midnight, then noodles. The correct order of operations.</p>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ───────── 02 INDIA ───────── -->
+  <section class="chapter chapter--flip" id="india" data-zone="2" data-accent="india">
+    <div class="chapter__ghost" data-parallax="0.18" aria-hidden="true">02</div>
+
+    <div class="chapter__head">
+      <p class="chapter__tag reveal"><i>Chapter 02</i> भारत</p>
+      <h2 class="chapter__title" data-split>India</h2>
+      <p class="chapter__place reveal"><span>21 days</span> · December · 24°C and every colour at once</p>
+    </div>
+
+    <div class="chapter__body">
+      <div class="chapter__copy reveal">
+        <p class="lead">
+          Three weeks is insultingly short for India, and I knew that going in.
+          So I chose depth over distance: the north, slowly.
+        </p>
+        <p>
+          Delhi woke me at five with horns and prayer calls overlapping, and I
+          stopped fighting it after a day. Jaipur was pink in the daylight and
+          gold at sunset. Varanasi was the one that changed something — smoke,
+          marigolds, and a river that has been doing this for three thousand
+          years without asking anyone's permission.
+        </p>
+        <p>
+          I ended in Kerala, on a houseboat going nowhere in particular, which
+          turned out to be the whole point.
+        </p>
+        <blockquote>
+          “India doesn’t ask you to keep up. It just keeps going, and
+          eventually you’re part of the traffic too.”
+        </blockquote>
+      </div>
+
+      <ul class="facts reveal">
+        <li><span>Route</span><b>Delhi → Jaipur → Agra → Varanasi → Kerala</b></li>
+        <li><span>Weather</span><b>Warm days, cold dawns</b></li>
+        <li><span>Best bite</span><b>Poha on a Delhi street</b></li>
+        <li><span>Best hour</span><b>05:30, the ghats at Varanasi</b></li>
+        <li><span>Trains taken</span><b>9</b></li>
+        <li><span>Photos</span><b>3,180</b></li>
+      </ul>
+    </div>
+
+    <ul class="highlights">
+      <li class="reveal">
+        <span class="highlights__n">01</span>
+        <h3>The Taj Mahal</h3>
+        <p>Arrived at sunrise to beat the queue. Nobody speaks in those first ten minutes.</p>
+      </li>
+      <li class="reveal">
+        <span class="highlights__n">02</span>
+        <h3>Jaipur, the Pink City</h3>
+        <p>Hawa Mahal's nine hundred windows. A rooftop, chai, and a city turning to gold.</p>
+      </li>
+      <li class="reveal">
+        <span class="highlights__n">03</span>
+        <h3>Varanasi ghats</h3>
+        <p>Dawn boats, burning lamps, and the loudest quiet I have ever stood in.</p>
+      </li>
+      <li class="reveal">
+        <span class="highlights__n">04</span>
+        <h3>Kerala backwaters</h3>
+        <p>Two days at walking pace through coconut shade. Nowhere to be, nothing to fix.</p>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ───────── 03 IRELAND ───────── -->
+  <section class="chapter" id="ireland" data-zone="3" data-accent="ireland">
+    <div class="chapter__ghost" data-parallax="0.18" aria-hidden="true">03</div>
+
+    <div class="chapter__head">
+      <p class="chapter__tag reveal"><i>Chapter 03</i> Éire</p>
+      <h2 class="chapter__title" data-split>Ireland</h2>
+      <p class="chapter__place reveal"><span>10 days</span> · June · 15°C, wind off the Atlantic</p>
+    </div>
+
+    <div class="chapter__body">
+      <div class="chapter__copy reveal">
+        <p class="lead">
+          Ireland was the decompression. Two months of cities and crowds, and
+          then a rented car, one road, and green for as far as the fog allowed.
+        </p>
+        <p>
+          I drove the west: Dublin to Galway, then the coast north to the
+          Cliffs of Moher, then south into Kerry where the road narrows to a
+          single lane and everyone waves as they pass. I spent an hour sitting
+          on a wall doing absolutely nothing, and it remains the best hour of
+          the entire trip.
+        </p>
+        <p>
+          It rained sideways on the cliffs. A stranger handed me a flask and
+          said nothing. That is Ireland.
+        </p>
+        <blockquote>
+          “Ireland is the only place I’ve been where the weather is a
+          personality, not an inconvenience.”
+        </blockquote>
+      </div>
+
+      <ul class="facts reveal">
+        <li><span>Route</span><b>Dublin → Galway → Cliffs → Dingle → Cork</b></li>
+        <li><span>Weather</span><b>Four seasons hourly</b></li>
+        <li><span>Best bite</span><b>Chowder in Dingle</b></li>
+        <li><span>Best hour</span><b>21:30, still daylight</b></li>
+        <li><span>Km driven</span><b>1,240</b></li>
+        <li><span>Songs learned</span><b>Too many to admit</b></li>
+      </ul>
+    </div>
+
+    <ul class="highlights">
+      <li class="reveal">
+        <span class="highlights__n">01</span>
+        <h3>Cliffs of Moher</h3>
+        <p>Two hundred metres of black rock, wind you can lean on, and puffins somewhere below.</p>
+      </li>
+      <li class="reveal">
+        <span class="highlights__n">02</span>
+        <h3>Galway</h3>
+        <p>Music spilling out of doorways onto wet cobbles. Followed the sound for three hours.</p>
+      </li>
+      <li class="reveal">
+        <span class="highlights__n">03</span>
+        <h3>Ring of Kerry</h3>
+        <p>Single-track road, sheep with right of way, and a viewpoint with nobody else in it.</p>
+      </li>
+      <li class="reveal">
+        <span class="highlights__n">04</span>
+        <h3>Giant's Causeway</h3>
+        <p>Forty thousand basalt columns, and a coastline that looks designed by someone showing off.</p>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ───────── 04 ROUTE ───────── -->
+  <section class="chapter chapter--wide" id="route" data-zone="4" data-accent="route">
+    <div class="chapter__head">
+      <p class="chapter__tag reveal"><i>Chapter 04</i> The long way round</p>
+      <h2 class="chapter__title" data-split>The Route</h2>
+      <p class="chapter__place reveal"><span>41,286 km</span> · 3 countries · 17 cities · 1 backpack</p>
+    </div>
+
+    <div class="map reveal">
+      <svg class="map__svg" viewBox="0 0 900 470" role="img" aria-label="Map of Lakshya's route from Ireland to London to India">
+        <defs>
+          <linearGradient id="seaGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#0b1220" />
+            <stop offset="100%" stop-color="#0d1a2a" />
+          </linearGradient>
+          <linearGradient id="routeGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#6ea8ff" />
+            <stop offset="50%" stop-color="#ffb347" />
+            <stop offset="100%" stop-color="#35d07f" />
+          </linearGradient>
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="5" result="b" />
+            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+
+        <rect width="900" height="470" fill="url(#seaGrad)" />
+
+        <!-- abstract landmasses -->
+        <g class="map__land">
+          <path d="M180 90c50-30 120-40 170-18 40 18 62 54 46 82-14 24-52 30-86 44-40 16-74 44-112 34-38-10-52-50-42-84 8-28 12-42 24-58z" />
+          <path d="M210 250c40-16 86-8 104 22 16 26 2 60-26 76-30 18-72 18-96-4-22-20-16-56 6-76 4-4 8-14 12-18z" />
+          <path d="M520 120c60-34 150-44 240-20 60 16 96 50 84 88-12 38-70 62-140 70-78 8-158-6-198-40-30-26-14-72 14-98z" />
+          <path d="M660 300c40-14 88-4 104 26 14 26-4 58-40 68-40 10-88 0-102-26-12-24 8-58 38-68z" />
+          <path d="M300 380c40-18 96-14 122 12 22 22 8 54-28 66-42 14-104 10-124-14-16-20 2-50 30-64z" />
+        </g>
+
+        <!-- route arcs -->
+        <path class="map__route" id="route-a" d="M258 148 C 300 92, 372 78, 424 104" />
+        <path class="map__route" id="route-b" d="M424 104 C 520 26, 700 60, 726 176" />
+        <path class="map__route map__route--return" id="route-c" d="M726 176 C 700 300, 520 366, 300 400" />
+
+        <!-- nodes -->
+        <g class="map__node" data-node="ireland" transform="translate(258 148)">
+          <circle r="16" /><circle r="5" />
+          <text x="0" y="-26">IRELAND</text>
+        </g>
+        <g class="map__node" data-node="london" transform="translate(424 104)">
+          <circle r="16" /><circle r="5" />
+          <text x="0" y="-26">LONDON</text>
+        </g>
+        <g class="map__node" data-node="india" transform="translate(726 176)">
+          <circle r="16" /><circle r="5" />
+          <text x="0" y="-26">INDIA</text>
+        </g>
+
+        <!-- travelling plane -->
+        <g class="map__plane" filter="url(#glow)">
+          <path d="M-9 0 L9 -3.4 L2 0 L9 3.4 Z" />
+          <animateMotion dur="14s" repeatCount="indefinite" rotate="auto"
+            path="M258 148 C 300 92, 372 78, 424 104 C 520 26, 700 60, 726 176 C 700 300, 520 366, 300 400 C 272 408, 264 380, 258 148" />
+        </g>
+
+        <g class="map__legend">
+          <text x="34" y="34">LAKSHYA · THE LONG WAY ROUND</text>
+          <text x="34" y="54" class="map__legend-sub">IRELAND → LONDON → INDIA → KERALA → HOME</text>
+        </g>
+      </svg>
+
+      <ol class="itin">
+        <li class="reveal"><span class="itin__k">Leg 01</span><h3>Dublin → London</h3><p>Aer Lingus, 1h 15m. Arrived in time for a very late dinner.</p><em>26 May</em></li>
+        <li class="reveal"><span class="itin__k">Leg 02</span><h3>London → Delhi</h3><p>Nine hours, two films, one sunrise over Kazakhstan.</p><em>12 March</em></li>
+        <li class="reveal"><span class="itin__k">Leg 03</span><h3>Delhi → Jaipur → Agra</h3><p>The Golden Triangle by train. Shatabdi Express, window seat, no regrets.</p><em>18 March</em></li>
+        <li class="reveal"><span class="itin__k">Leg 04</span><h3>Varanasi → Kochi</h3><p>Down the length of the country in three hours. Winter to tropical.</p><em>28 March</em></li>
+        <li class="reveal"><span class="itin__k">Leg 05</span><h3>Kerala → Dublin</h3><p>Back to the green. Slept for a full day and started planning the next one.</p><em>06 April</em></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ───────── 05 POSTCARDS ───────── -->
+  <section class="chapter" id="gallery" data-zone="4">
+    <div class="chapter__head">
+      <p class="chapter__tag reveal"><i>Chapter 05</i> From the road</p>
+      <h2 class="chapter__title" data-split>Postcards</h2>
+      <p class="chapter__place reveal"><span>Nine moments</span> · that a camera can’t really hold</p>
+    </div>
+
+    <ul class="cards">
+      <li class="card reveal" data-tilt>
+        <div class="card__art card__art--london"><svg viewBox="0 0 200 130" aria-hidden="true"><rect x="78" y="26" width="30" height="94" fill="currentColor" opacity=".18"/><rect x="76" y="52" width="34" height="26" fill="currentColor"/><circle cx="93" cy="65" r="8" fill="#fff6d0"/><path d="M78 26l15-18 15 18z" fill="currentColor"/><rect x="86" y="8" width="3" height="10" fill="currentColor"/><rect x="20" y="88" width="52" height="32" fill="currentColor" opacity=".55"/><rect x="128" y="96" width="54" height="24" fill="currentColor" opacity=".4"/></svg></div>
+        <div class="card__meta"><b>Big Ben</b><span>Westminster · 06:20</span></div>
+      </li>
+      <li class="card reveal" data-tilt>
+        <div class="card__art card__art--london"><svg viewBox="0 0 200 130" aria-hidden="true"><circle cx="100" cy="66" r="42" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="100" cy="66" r="5" fill="currentColor"/><g stroke="currentColor" stroke-width="1.6" opacity=".7"><path d="M100 24v84M58 66h84M70 36l60 60M130 36l-60 60M85 27l30 78M115 27l-30 78"/></g><path d="M74 108l26-42 26 42" fill="none" stroke="currentColor" stroke-width="2.4"/></svg></div>
+        <div class="card__meta"><b>The London Eye</b><span>South Bank · sunset</span></div>
+      </li>
+      <li class="card reveal" data-tilt>
+        <div class="card__art card__art--london"><svg viewBox="0 0 200 130" aria-hidden="true"><rect x="52" y="44" width="30" height="72" fill="currentColor"/><rect x="118" y="44" width="30" height="72" fill="currentColor"/><path d="M60 44h14v-14l8-8 8 8v14h14" fill="none" stroke="currentColor" stroke-width="3"/><path d="M82 80h36" stroke="currentColor" stroke-width="4"/><path d="M30 100c22-8 44-8 66 0s44 8 66 0" fill="none" stroke="currentColor" stroke-width="3" opacity=".6"/></svg></div>
+        <div class="card__meta"><b>Tower Bridge</b><span>Blue hour</span></div>
+      </li>
+      <li class="card reveal" data-tilt>
+        <div class="card__art card__art--india"><svg viewBox="0 0 200 130" aria-hidden="true"><ellipse cx="100" cy="30" rx="18" ry="14" fill="currentColor"/><path d="M100 10c6 6 8 12 8 18h-16c0-6 2-12 8-18z" fill="currentColor" opacity=".8"/><rect x="62" y="42" width="76" height="60" fill="currentColor" opacity=".45"/><path d="M80 102V72c0-8 9-14 20-14s20 6 20 14v30z" fill="#0b1220" opacity=".65"/><g fill="currentColor"><rect x="44" y="46" width="9" height="58"/><rect x="147" y="46" width="9" height="58"/></g><rect x="24" y="102" width="152" height="7" fill="currentColor"/></svg></div>
+        <div class="card__meta"><b>Taj Mahal</b><span>Agra · sunrise</span></div>
+      </li>
+      <li class="card reveal" data-tilt>
+        <div class="card__art card__art--india"><svg viewBox="0 0 200 130" aria-hidden="true"><path d="M100 18l64 22v62H36V40z" fill="currentColor" opacity=".35"/><g fill="currentColor"><rect x="62" y="52" width="16" height="50"/><rect x="84" y="42" width="16" height="60"/><rect x="106" y="46" width="16" height="56"/><rect x="128" y="56" width="16" height="46"/><rect x="44" y="60" width="14" height="42"/></g><g fill="#0b1220" opacity=".5"><rect x="66" y="58" width="8" height="12"/><rect x="88" y="48" width="8" height="12"/><rect x="110" y="52" width="8" height="12"/><rect x="132" y="62" width="8" height="12"/></g></svg></div>
+        <div class="card__meta"><b>Hawa Mahal</b><span>Jaipur · noon</span></div>
+      </li>
+      <li class="card reveal" data-tilt>
+        <div class="card__art card__art--india"><svg viewBox="0 0 200 130" aria-hidden="true"><path d="M20 92h160l-16 20H36z" fill="currentColor"/><rect x="48" y="60" width="104" height="32" fill="currentColor" opacity=".6"/><g stroke="currentColor" stroke-width="2.4" opacity=".55"><path d="M60 92V70M150 92V70"/><path d="M60 70h90"/></g><path d="M150 70c22-4 26-28 8-34 18 0 24 12 22 22-2 12-14 16-30 12z" fill="currentColor" opacity=".7"/><path d="M20 116c26 8 60 8 86 0s44-8 74 0" fill="none" stroke="currentColor" stroke-width="2.6" opacity=".5"/></svg></div>
+        <div class="card__meta"><b>Kerala backwaters</b><span>Alleppey · dusk</span></div>
+      </li>
+      <li class="card reveal" data-tilt>
+        <div class="card__art card__art--ireland"><svg viewBox="0 0 200 130" aria-hidden="true"><path d="M0 130V64l26-10 14 12 22-16 20 14 24-20 22 18 20-14 26 12 26-8v66z" fill="currentColor" opacity=".75"/><path d="M0 130V96h200v34z" fill="currentColor" opacity=".95"/><path d="M0 104c30 6 60-4 92 0s70 8 108-2" fill="none" stroke="#04120d" stroke-width="2" opacity=".5"/><circle cx="150" cy="30" r="12" fill="currentColor" opacity=".35"/></svg></div>
+        <div class="card__meta"><b>Cliffs of Moher</b><span>Co. Clare · sideways rain</span></div>
+      </li>
+      <li class="card reveal" data-tilt>
+        <div class="card__art card__art--ireland"><svg viewBox="0 0 200 130" aria-hidden="true"><path d="M0 130V78c28-14 52 6 78-4s44-22 70-10 52 4 52 4v62z" fill="currentColor" opacity=".6"/><path d="M-10 120c40-24 70-8 104-24S170 68 210 82" fill="none" stroke="#04120d" stroke-width="7" stroke-linecap="round"/><path d="M-10 120c40-24 70-8 104-24S170 68 210 82" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="12 10" stroke-linecap="round"/><g fill="currentColor"><circle cx="46" cy="52" r="9"/><circle cx="60" cy="60" r="11"/></g></svg></div>
+        <div class="card__meta"><b>Ring of Kerry</b><span>Single-track · sheep</span></div>
+      </li>
+      <li class="card reveal" data-tilt>
+        <div class="card__art card__art--ireland"><svg viewBox="0 0 200 130" aria-hidden="true"><g fill="currentColor"><path d="M60 130V56l12-8 12 8v74z"/><path d="M86 130V42l12-8 12 8v88z"/><path d="M112 130V60l12-8 12 8v70z"/><path d="M138 130V50l12-8 12 8v80z"/><path d="M34 130V66l12-8 12 8v64z"/></g><path d="M20 130h164v-8H20z" fill="currentColor" opacity=".5"/></svg></div>
+        <div class="card__meta"><b>Giant's Causeway</b><span>Co. Antrim · 40,000 columns</span></div>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ───────── 06 JOURNAL ───────── -->
+  <section class="chapter" id="journal" data-zone="4">
+    <div class="chapter__head">
+      <p class="chapter__tag reveal"><i>Chapter 06</i> Notes app, unedited</p>
+      <h2 class="chapter__title" data-split>Journal</h2>
+      <p class="chapter__place reveal"><span>Written badly</span> · at airports, mostly</p>
+    </div>
+
+    <ol class="journal">
+      <li class="reveal">
+        <time>12 March</time>
+        <h3>Heathrow, 04:40</h3>
+        <p>Everything is shut and everyone is asleep sitting up. I have decided I am a morning person now. This will last nine days.</p>
+      </li>
+      <li class="reveal">
+        <time>17 March</time>
+        <h3>Camden, raining again</h3>
+        <p>Bought a record I can't play until I get home. Worth it. The market smells like sugar and wet pavement.</p>
+      </li>
+      <li class="reveal">
+        <time>21 March</time>
+        <h3>Delhi, first morning</h3>
+        <p>Five a.m. and the street is already louder than any place I've been. I stopped being tired around noon and stayed that way for three weeks.</p>
+      </li>
+      <li class="reveal">
+        <time>24 March</time>
+        <h3>Agra, sunrise</h3>
+        <p>Ten minutes of nobody talking. Then the tour groups arrived and it became a different, noisier kind of beautiful.</p>
+      </li>
+      <li class="reveal">
+        <time>31 March</time>
+        <h3>Varanasi, boat at dawn</h3>
+        <p>I don't have words for this yet. I'll come back to it. I understand why people don't try.</p>
+      </li>
+      <li class="reveal">
+        <time>06 April</time>
+        <h3>Alleppey, going nowhere</h3>
+        <p>Two days at the speed of water. My phone died on purpose, I think, and I didn't charge it for a day.</p>
+      </li>
+      <li class="reveal">
+        <time>26 May</time>
+        <h3>Dublin → Galway</h3>
+        <p>Green, then greener. The radio is playing something I'll be humming for months and I don't know its name.</p>
+      </li>
+      <li class="reveal">
+        <time>29 May</time>
+        <h3>Cliffs of Moher, soaked</h3>
+        <p>A man gave me whiskey from a flask and walked off before I could thank him properly. Best moment of the trip. Ireland, honestly.</p>
+      </li>
+      <li class="reveal">
+        <time>02 June</time>
+        <h3>Dingle, last night</h3>
+        <p>Sitting on a wall at half nine at night and it's still bright. Three countries down. Already looking at maps for the next one.</p>
+      </li>
+    </ol>
+
+    <div class="outro reveal">
+      <p class="outro__big">Three lands. One journey.</p>
+      <p>
+        Ireland, London, India — three completely different answers to the same
+        question. I came back with a heavier bag, a lighter head, and a very
+        long list of places I still owe a visit.
+      </p>
+      <p class="outro__sign">— Lakshya</p>
+    </div>
+  </section>
+
+  <!-- ───────── FOOTER ───────── -->
+  <footer class="footer" id="contact">
+    <div class="footer__grid">
+      <div>
+        <p class="footer__brand">LAKSHYA</p>
+        <p class="footer__note">Travel journal · built as a scroll-driven 3D journey. No template, no framework.</p>
+      </div>
+      <nav aria-label="Footer">
+        <p class="footer__h">Chapters</p>
+        <a href="#london">01 London</a>
+        <a href="#india">02 India</a>
+        <a href="#ireland">03 Ireland</a>
+        <a href="#route">04 The route</a>
+      </nav>
+      <div>
+        <p class="footer__h">Follow along</p>
+        <a href="mailto:lakshya@example.com">lakshya@example.com</a>
+        <a href="https://github.com/" target="_blank" rel="noopener">github</a>
+        <a href="https://www.instagram.com/" target="_blank" rel="noopener">instagram</a>
+      </div>
+    </div>
+    <p class="footer__bottom">
+      <span>© <span id="year">2026</span> Lakshya — Ireland · London · India</span>
+      <a href="#hero">back to the top ↑</a>
+    </p>
+  </footer>
+</main>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js"
+  }
+}
+</script>
+<script src="main.js" defer></script>
+<script type="module" src="scene.js"></script>
+<script>
+  // Last-resort safety net: if main.js never runs (blocked, parse error, ancient
+  // browser) nothing must stay hidden behind the loader or the reveal styles.
+  setTimeout(function () {
+    var l = document.getElementById('loader');
+    if (l) l.classList.add('is-hidden');
+    document.body.style.overflow = '';
+    var nodes = document.querySelectorAll('.reveal, [data-split]');
+    for (var i = 0; i < nodes.length; i++) nodes[i].classList.add('is-in');
+  }, 4500);
+</script>
+</body>
+</html>
